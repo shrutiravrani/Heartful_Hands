@@ -1,164 +1,155 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api';
+import './ManageApplications.css';
 
 const ManageApplications = () => {
+  // Get event ID from URL parameters
   const { id } = useParams();
   const navigate = useNavigate();
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
+  // State management
+  const [applications, setApplications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Fetch applications when component mounts
   useEffect(() => {
-    const fetchApplications = async () => {
+    const getApplications = async () => {
       try {
+        // Validate event ID
         if (!id) {
-          setError('No event ID provided');
-          setLoading(false);
+          setErrorMessage('Event ID is missing');
+          setIsLoading(false);
           return;
         }
 
-        console.log('Event ID from params:', id);
+        // Fetch applications from API
         const response = await API.get(`/events/${id}/applications`);
-        console.log("API Response:", response.data);
-    
-        if (!response.data || !Array.isArray(response.data.applicants)) {
-          throw new Error('Invalid response format');
+        
+        // Validate response data
+        if (!response.data?.applicants) {
+          throw new Error('Invalid response from server');
         }
-    
+
+        // Update applications state
         setApplications(response.data.applicants);
-      } catch (err) {
-        console.error("Error Fetching Applications:", err);
-        console.error("Error details:", err.response?.data);
-        setError(err.response?.data?.error || 'Failed to load applications');
+      } catch (error) {
+        // Handle API errors
+        const errorMsg = error.response?.data?.error || 'Failed to load applications';
+        setErrorMessage(errorMsg);
+        console.error('Error loading applications:', error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchApplications();
+    getApplications();
   }, [id]);
 
-  const updateStatus = async (applicationId, newStatus) => {
+  // Handle application status updates
+  const handleStatusUpdate = async (applicationId, newStatus) => {
     try {
-      console.log(`Updating application ${applicationId} to ${newStatus}`);
+      // Update application status
       const response = await API.put(`/events/${id}/applications/${applicationId}`, { 
         status: newStatus.toLowerCase()
       });
 
-      console.log('Update response:', response.data);
-
+      // Update local state if API call succeeds
       if (response.status === 200) {
-        setApplications(applications.map(app => 
-          app._id === applicationId ? { ...app, status: newStatus } : app
-        ));
+        setApplications(currentApps => 
+          currentApps.map(app => 
+            app._id === applicationId ? { ...app, status: newStatus } : app
+          )
+        );
         alert(`Application ${newStatus.toLowerCase()} successfully`);
       }
-    } catch (err) {
-      console.error('Error updating status:', err);
-      console.error('Error response:', err.response?.data);
-      alert(err.response?.data?.error || 'Failed to update application status');
+    } catch (error) {
+      // Handle update errors
+      const errorMsg = error.response?.data?.error || 'Failed to update application status';
+      alert(errorMsg);
+      console.error('Error updating application:', error);
     }
   };
 
-  if (loading) return <div className="loading">Loading applications...</div>;
-  if (error) return (
-    <div className="error-container">
-      <p className="error">{error}</p>
-      <button onClick={() => navigate('/event-manager-events')}>Back to Events</button>
-    </div>
-  );
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <p>Loading applications...</p>
+      </div>
+    );
+  }
 
+  // Error state
+  if (errorMessage) {
+    return (
+      <div className="error-container">
+        <p className="error-message">{errorMessage}</p>
+        <button 
+          className="back-button"
+          onClick={() => navigate('/event-manager-events')}
+        >
+          Back to Events
+        </button>
+      </div>
+    );
+  }
+
+  // Main render
   return (
-    <div className="manage-applications-container" style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="manage-applications-container">
+      <div className="header-section">
         <h2>Manage Applications</h2>
         <button 
+          className="back-button"
           onClick={() => navigate('/event-manager-events')}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
         >
           Back to Events
         </button>
       </div>
 
       {applications.length === 0 ? (
-        <div className="no-applications" style={{ textAlign: 'center', marginTop: '20px' }}>
+        <div className="no-applications">
           <p>No applications for this event</p>
         </div>
       ) : (
-        <div className="applications-list" style={{ display: 'grid', gap: '20px' }}>
-          {applications.map(app => (
+        <div className="applications-list">
+          {applications.map(application => (
             <div 
-              key={app._id} 
+              key={application._id} 
               className="application-card"
-              style={{
-                padding: '20px',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                backgroundColor: 'white',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}
             >
               <div className="application-info">
-                <h3 style={{ margin: '0 0 10px 0' }}>{app.user?.name || 'Unknown'}</h3>
-                <p><strong>Email:</strong> {app.user?.email || 'Unknown'}</p>
-                <p><strong>Bio:</strong> {app.user?.bio || 'No bio available'}</p>
-                <p><strong>Status:</strong> <span style={{
-                  color: app.status === 'Pending' ? '#f0ad4e' : 
-                         app.status === 'Accepted' ? '#5cb85c' : '#d9534f'
-                }}>{app.status}</span></p>
+                <h3>{application.user?.name || 'Unknown'}</h3>
+                <p><strong>Email:</strong> {application.user?.email || 'Unknown'}</p>
+                <p><strong>Bio:</strong> {application.user?.bio || 'No bio available'}</p>
+                <p>
+                  <strong>Status:</strong> 
+                  <span className={`status-badge status-${application.status.toLowerCase()}`}>
+                    {application.status}
+                  </span>
+                </p>
               </div>
               
-              <div className="action-buttons" style={{ 
-                marginTop: '15px',
-                display: 'flex',
-                gap: '10px'
-              }}>
+              <div className="action-buttons">
                 <button 
-                  onClick={() => navigate(`/volunteer-profile/${app.user?._id}`)}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#0275d8',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
+                  className="view-profile-button"
+                  onClick={() => navigate(`/volunteer-profile/${application.user?._id}`)}
                 >
                   View Profile
                 </button>
-                {app.status === 'Pending' && (
+                {application.status === 'Pending' && (
                   <>
                     <button 
-                      onClick={() => updateStatus(app._id, 'Accepted')}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#5cb85c',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
+                      className="accept-button"
+                      onClick={() => handleStatusUpdate(application._id, 'Accepted')}
                     >
                       Accept
                     </button>
                     <button 
-                      onClick={() => updateStatus(app._id, 'Rejected')}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#d9534f',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
+                      className="reject-button"
+                      onClick={() => handleStatusUpdate(application._id, 'Rejected')}
                     >
                       Reject
                     </button>

@@ -97,7 +97,7 @@ body {
 }
 
 .signup-message.success {
-  color: green;
+  color: rgb(0, 106, 0);
 }
 
 .signup-message.error {

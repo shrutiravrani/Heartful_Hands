@@ -4,116 +4,125 @@ import { Home, Calendar, Users, FileText, LogOut, Menu, X, MessageSquare, Book, 
 import "./Sidebar.css"; // Import the FIXED CSS
 
 const Sidebar = ({ user }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  // State for sidebar visibility
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
 
-  // Toggle Sidebar
+  // Toggle sidebar visibility
   const toggleSidebar = () => {
-    setIsOpen(!isOpen);
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Handle Logout
+  // Handle user logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
 
-  // Close Sidebar when clicking outside (but not on navbar)
+  // Close sidebar when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target) && !event.target.closest(".menu-btn")) {
-        setIsOpen(false);
+    const handleOutsideClick = (event) => {
+      const clickedOutside = sidebarRef.current && 
+        !sidebarRef.current.contains(event.target) && 
+        !event.target.closest(".menu-btn");
+      
+      if (clickedOutside) {
+        setIsSidebarOpen(false);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+    // Add or remove event listener based on sidebar state
+    if (isSidebarOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
     } else {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleOutsideClick);
     }
 
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isSidebarOpen]);
+
+  // Navigation items for all users
+  const commonNavItems = [
+    { path: "/dashboard", icon: Home, label: "Dashboard" },
+    { path: "/profile", icon: Users, label: "Profile" },
+    { path: "/reports", icon: FileText, label: "Reports" },
+    { path: "/training", icon: BookOpen, label: "Training" },
+    { path: "/user-guide", icon: Book, label: "User Guide" }
+  ];
+
+  // Navigation items for event managers
+  const managerNavItems = [
+    { path: "/send-messages", icon: MessageSquare, label: "Send Messages" },
+    { path: "/messages", icon: MessageSquare, label: "My Chat" }
+  ];
+
+  // Navigation items based on user role
+  const roleSpecificNavItems = user?.role === "volunteer" 
+    ? [{ path: "/volunteer-events", icon: Calendar, label: "My Events" }]
+    : [{ path: "/event-manager-events", icon: Calendar, label: "Manage Events" }];
 
   return (
     <>
-      {/* ☰ Hamburger Menu Button */}
-      <button className="menu-btn" onClick={toggleSidebar}>
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      {/* Hamburger menu button */}
+      <button 
+        className="menu-btn" 
+        onClick={toggleSidebar}
+        aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+      >
+        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar */}
-      <div ref={sidebarRef} className={`sidebar ${isOpen ? "open" : ""}`}>
+      {/* Sidebar navigation */}
+      <div 
+        ref={sidebarRef} 
+        className={`sidebar ${isSidebarOpen ? "open" : ""}`}
+        role="navigation"
+      >
         <h2>Heartful Hands</h2>
 
-        {/* Navigation */}
+        {/* Navigation links */}
         <ul>
-          <li>
-            <Link to="/dashboard" onClick={toggleSidebar}>
-              <Home size={20} />
-              <span>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/profile" onClick={toggleSidebar}>
-              <Users size={20} />
-              <span>Profile</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/reports" onClick={toggleSidebar}>
-              <FileText size={20} />
-              <span>Reports</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/training" onClick={toggleSidebar}>
-              <BookOpen size={20} />
-              <span>Training</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/user-guide" onClick={toggleSidebar}>
-              <Book size={20} />
-              <span>User Guide</span>
-            </Link>
-          </li>
-          {user?.role === "event_manager" && (
-            <>
-              <li>
-                <Link to="/send-messages" onClick={toggleSidebar}>
-                  <MessageSquare size={20} />
-                  <span>Send Messages</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/messages" onClick={toggleSidebar}>
-                  <MessageSquare size={20} />
-                  <span>My Chat</span>
-                </Link>
-              </li>
-            </>
-          )}
-          {user?.role === "volunteer" ? (
-            <li>
-              <Link to="/volunteer-events" onClick={toggleSidebar}>
-                <Calendar size={20} />
-                <span>My Events</span>
+          {/* Common navigation items */}
+          {commonNavItems.map(({ path, icon: Icon, label }) => (
+            <li key={path}>
+              <Link to={path} onClick={toggleSidebar}>
+                <Icon size={20} />
+                <span>{label}</span>
               </Link>
             </li>
-          ) : (
-            <li>
-              <Link to="/event-manager-events" onClick={toggleSidebar}>
-                <Calendar size={20} />
-                <span>Manage Events</span>
+          ))}
+
+          {/* Event manager specific items */}
+          {user?.role === "event_manager" && managerNavItems.map(({ path, icon: Icon, label }) => (
+            <li key={path}>
+              <Link to={path} onClick={toggleSidebar}>
+                <Icon size={20} />
+                <span>{label}</span>
               </Link>
             </li>
-          )}
+          ))}
+
+          {/* Role specific items */}
+          {roleSpecificNavItems.map(({ path, icon: Icon, label }) => (
+            <li key={path}>
+              <Link to={path} onClick={toggleSidebar}>
+                <Icon size={20} />
+                <span>{label}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
 
-        {/* Logout */}
-        <button className="logout-btn" onClick={handleLogout}>
+        {/* Logout button */}
+        <button 
+          className="logout-btn" 
+          onClick={handleLogout}
+          aria-label="Logout"
+        >
           <LogOut size={20} />
           <span>Logout</span>
         </button>

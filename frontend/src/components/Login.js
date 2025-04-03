@@ -1,69 +1,98 @@
 import React, { useState } from "react";
 import API from "../api";
-import { useNavigate } from "react-router-dom"; // Importing useNavigate
-import "./Login.css"; // Import the updated CSS
+import "./Login.css";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [message, setMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
-  const navigate = useNavigate(); // Initializing useNavigate
+  // State for form data and feedback
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: ""
+  });
+  const [feedback, setFeedback] = useState({
+    message: "",
+    isSuccess: false
+  });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Handle input changes
+  const updateInput = (e) => {
+    const { name, value } = e.target;
+    setLoginData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleSubmit = async (e) => {
+  // Handle form submission
+  const submitLogin = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setIsSuccess(false);
+    setFeedback({ message: "", isSuccess: false });
 
     try {
-      const { data } = await API.post("/auth/login", formData);
+      // Attempt to log in
+      const response = await API.post("/auth/login", loginData);
       
-      // Store both token and user data
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Store authentication data
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // Force a page reload to update the App component's user state
+      // Redirect to dashboard
       window.location.href = "/dashboard";
-    } catch (error) {
-      setMessage(error.response?.data?.message || "Error logging in");
-      setIsSuccess(false);
+    } catch (err) {
+      // Handle login error
+      const errorMessage = err.response?.data?.message || "Failed to log in. Please try again.";
+      setFeedback({
+        message: errorMessage,
+        isSuccess: false
+      });
     }
   };
 
   return (
     <div className="login-container">
-      <h2 className="login-header">Welcome Back</h2>
+      <div className="login-content">
+        <h2 className="login-header">Welcome Back</h2>
+        <p className="login-subtitle">Sign in to continue to your account</p>
 
-      <form onSubmit={handleSubmit} className="login-form">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <form onSubmit={submitLogin} className="login-form">
+          <div className="form-group">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email address"
+              value={loginData.email}
+              onChange={updateInput}
+              className="form-input"
+              required
+            />
+          </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
+          <div className="form-group">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={loginData.password}
+              onChange={updateInput}
+              className="form-input"
+              required
+            />
+          </div>
 
-        <button type="submit" className="login-btn">Login</button>
-      </form>
+          <button type="submit" className="login-btn">
+            Sign In
+          </button>
+        </form>
 
-      {message && (
-        <p className={`login-message ${isSuccess ? "success" : "error"}`}>
-          {message}
-        </p>
-      )}
+        {feedback.message && (
+          <div className={`login-feedback ${feedback.isSuccess ? "success" : "error"}`}>
+            {feedback.message}
+          </div>
+        )}
+
+        <div className="login-links">
+          <a href="/signup" className="login-link">Do not have account? Create account</a>
+        </div>
+      </div>
     </div>
   );
 };

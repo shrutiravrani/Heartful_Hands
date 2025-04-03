@@ -3,42 +3,47 @@ import API from "../api";
 import { io } from "socket.io-client";
 import "./SendMessages.css";
 
-// Initialize socket with the backend URL from the API configuration
+// Set up socket connection with backend
 const socket = io(API.defaults.baseURL, {
   withCredentials: true,
   transports: ['websocket', 'polling']
 });
 
 const SendMessages = () => {
+  // State management
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("");
   const [volunteers, setVolunteers] = useState([]);
   const [selectedVolunteers, setSelectedVolunteers] = useState([]);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectAll, setSelectAll] = useState(false);
 
+  // Handle socket connection and events
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    if (userId) {
-      console.log("Connecting to socket with userId:", userId);
-      socket.emit("joinUserRoom", userId);
-      
-      socket.on("connect", () => {
-        console.log("Socket connected successfully");
-      });
-      
-      socket.on("connect_error", (error) => {
-        console.error("Socket connection error:", error);
-        setError("Connection error. Please refresh the page.");
-      });
-      
-      socket.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
-      });
-    }
+    if (!userId) return;
+
+    // Set up socket connection
+    console.log("Connecting to socket with userId:", userId);
+    socket.emit("joinUserRoom", userId);
     
+    // Socket event handlers
+    socket.on("connect", () => {
+      console.log("Socket connected successfully");
+    });
+    
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+      setError("Connection error. Please refresh the page.");
+    });
+    
+    socket.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
+    });
+    
+    // Cleanup on unmount
     return () => {
       socket.off("connect");
       socket.off("connect_error");
@@ -47,8 +52,9 @@ const SendMessages = () => {
     };
   }, []);
 
+  // Fetch events created by the user
   useEffect(() => {
-    const fetchEvents = async () => {
+    const loadEvents = async () => {
       try {
         setError("");
         const response = await API.get("/events/created");
@@ -58,39 +64,42 @@ const SendMessages = () => {
           setError("Failed to load events");
         }
       } catch (err) {
-        console.error("Error fetching events:", err);
+        console.error("Error loading events:", err);
         setError("Failed to load events");
       }
     };
-    fetchEvents();
+    loadEvents();
   }, []);
 
+  // Fetch volunteers when an event is selected
   useEffect(() => {
-    if (selectedEvent) {
-      const fetchVolunteers = async () => {
-        try {
-          setError("");
-          const response = await API.get(`/events/${selectedEvent}/volunteers`);
-          if (Array.isArray(response.data)) {
-            setVolunteers(response.data);
-            setSelectedVolunteers([]);
-            setSelectAll(false);
-          } else {
-            setError("Failed to load volunteers");
-          }
-        } catch (err) {
-          console.error("Error fetching volunteers:", err);
-          setError("Failed to load volunteers");
-        }
-      };
-      fetchVolunteers();
-    } else {
+    if (!selectedEvent) {
       setVolunteers([]);
       setSelectedVolunteers([]);
       setSelectAll(false);
+      return;
     }
+
+    const loadVolunteers = async () => {
+      try {
+        setError("");
+        const response = await API.get(`/events/${selectedEvent}/volunteers`);
+        if (Array.isArray(response.data)) {
+          setVolunteers(response.data);
+          setSelectedVolunteers([]);
+          setSelectAll(false);
+        } else {
+          setError("Failed to load volunteers");
+        }
+      } catch (err) {
+        console.error("Error loading volunteers:", err);
+        setError("Failed to load volunteers");
+      }
+    };
+    loadVolunteers();
   }, [selectedEvent]);
 
+  // Handle select/deselect all volunteers
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedVolunteers([]);
@@ -100,6 +109,7 @@ const SendMessages = () => {
     setSelectAll(!selectAll);
   };
 
+  // Handle individual volunteer selection
   const handleVolunteerSelection = (volunteerId) => {
     setSelectedVolunteers((prev) => {
       const isSelected = prev.includes(volunteerId);
@@ -111,6 +121,7 @@ const SendMessages = () => {
     });
   };
 
+  // Send message to selected volunteers
   const handleSendMessage = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -123,33 +134,36 @@ const SendMessages = () => {
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
     setError("");
+
     try {
-      // Format the message data according to server expectations
+      // Prepare message data
       const messageData = {
         eventId: selectedEvent,
         recipients: selectedVolunteers,
-        message: message.trim(), // Changed back to 'message' from 'text'
-        senderId: localStorage.getItem("userId") // Changed from 'sender' to 'senderId'
+        message: message.trim(),
+        senderId: localStorage.getItem("userId")
       };
 
-      // Validate the message data
+      // Validate message
       if (!messageData.message || messageData.message.trim().length === 0) {
         throw new Error("Message cannot be empty");
       }
 
       console.log("Sending message with data:", messageData);
 
+      // Send message to server
       const response = await API.post("/chat/send", messageData);
 
       if (response.data) {
-        // Emit socket event
+        // Notify recipients via socket
         socket.emit("sendMessage", {
           ...response.data,
           sender: { _id: localStorage.getItem("userId") },
         });
 
+        // Reset form
         setMessage("");
         setSelectedVolunteers([]);
         setSelectAll(false);
@@ -161,7 +175,7 @@ const SendMessages = () => {
       console.error("Error sending message:", err);
       console.error("Error response:", err.response?.data);
       
-      // More specific error messages based on the error type
+      // Handle specific error cases
       if (err.response?.status === 400) {
         setError(err.response.data.message || "Invalid message format. Please try again.");
       } else if (err.response?.status === 401) {
@@ -174,7 +188,7 @@ const SendMessages = () => {
         setError("Failed to send message. Please try again.");
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -258,14 +272,14 @@ const SendMessages = () => {
 
           <button
             className={`send-button ${
-              loading || !message.trim() || selectedVolunteers.length === 0
+              isLoading || !message.trim() || selectedVolunteers.length === 0
                 ? "disabled"
                 : ""
             }`}
             onClick={handleSendMessage}
-            disabled={loading || !message.trim() || selectedVolunteers.length === 0}
+            disabled={isLoading || !message.trim() || selectedVolunteers.length === 0}
           >
-            {loading ? "Sending..." : "Send Message"}
+            {isLoading ? "Sending..." : "Send Message"}
           </button>
         </div>
       </div>

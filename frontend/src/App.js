@@ -7,25 +7,20 @@ import LandingPage from "./components/LandingPage";
 import Signup from "./components/Signup";
 import Login from "./components/Login";
 import Profile from "./components/Profile";
-import PostFeed from "./components/PostFeed";
 import CreateEvent from "./components/CreateEvent";
 import ManageApplications from "./components/ManageApplications";
-import CreatePost from "./components/CreatePost";
 import Dashboard from "./components/Dashboard";
 import Reports from "./components/Reports";
-import ForgotPassword from "./components/ForgotPassword";
-import ResetPassword from "./components/ResetPassword";
 import VolunteerEvents from "./components/VolunteerEvents";
 import EventManagerEvents from "./components/EventManagerEvents";
-import Notifications from "./components/Notifications";
 import SendMessages from "./components/SendMessages";
 import Sidebar from "./components/Sidebar";
 import VolunteerSidebar from "./components/VolunteerSidebar";
 import VolunteerChat from "./components/VolunteerChat";
 import EventManagerChat from "./components/EventManagerChat";
-import UserGuide from "./pages/UserGuide";
-import EventCompletionPage from "./pages/EventCompletionPage";
-import Training from './pages/Training';
+import UserGuide from "./components/UserGuide";
+import EventCompletionPage from "./components/EventCompletionPage";
+import Training from './components/Training';
 
 // Import Theme Provider & Toggle
 import { ThemeProvider } from "./context/ThemeContext";
@@ -106,18 +101,13 @@ const MainLayout = ({ user }) => {
             <Route path="/" element={<LandingPage />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-
+            
             {/* Protected Routes (Only for Logged-in Users) */}
             {user ? (
               <>
                 <Route path="/dashboard" element={<Dashboard user={user} />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/feed" element={<PostFeed />} />
-                <Route path="/create-post" element={<CreatePost />} />
                 <Route path="/reports" element={<Reports />} />
-                <Route path="/notifications" element={<Notifications />} />
                 <Route path="/send-messages" element={<SendMessages />} />
                 <Route path="/user-guide" element={<UserGuide user={user} />} />
                 <Route path="/training" element={<Training />} />

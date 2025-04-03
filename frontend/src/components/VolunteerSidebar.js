@@ -5,45 +5,11 @@ import ThemeToggle from './ThemeToggle';
 import './Sidebar.css';
 
 const VolunteerSidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
   const location = useLocation();
 
-  // Toggle Sidebar
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
-  // Handle Logout
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/login";
-  };
-
-  // Close Sidebar when clicking outside (but not on navbar)
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target) && !event.target.closest(".menu-btn")) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
-
-  // Check if the route is active
-  const isActive = (path) => {
-    return location.pathname === path ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-blue-100 dark:text-gray-300 dark:hover:bg-gray-700';
-  };
-
-  // Menu Items
+  // Navigation menu items
   const menuItems = [
     { path: '/dashboard', icon: <FaHome className="w-5 h-5" />, text: 'Dashboard' },
     { path: '/volunteer-events', icon: <FaClipboardList className="w-5 h-5" />, text: 'My Events' },
@@ -54,18 +20,73 @@ const VolunteerSidebar = () => {
     { path: '/training', icon: <FaBook className="w-5 h-5" />, text: 'Training' },
   ];
 
+  // Toggle sidebar visibility
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prevState => !prevState);
+  };
+
+  // Handle user logout
+  const handleLogout = () => {
+    // Clear user session
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    // Redirect to login page
+    window.location.href = "/login";
+  };
+
+  // Check if a route is currently active
+  const isActiveRoute = (path) => {
+    return location.pathname === path 
+      ? 'bg-blue-600 text-white' 
+      : 'text-gray-600 hover:bg-blue-100 dark:text-gray-300 dark:hover:bg-gray-700';
+  };
+
+  // Handle clicks outside the sidebar
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const clickedOutsideSidebar = sidebarRef.current && !sidebarRef.current.contains(event.target);
+      const clickedOnMenuButton = event.target.closest(".menu-btn");
+      
+      if (clickedOutsideSidebar && !clickedOnMenuButton) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Add or remove event listener based on sidebar state
+    if (isSidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+
   return (
     <>
-      {/* ☰ Hamburger Menu Button */}
-      <button className="menu-btn" onClick={toggleSidebar}>
-        {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+      {/* Hamburger Menu Button */}
+      <button 
+        className="menu-btn" 
+        onClick={toggleSidebar}
+        aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+      >
+        {isSidebarOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
       </button>
 
-      {/* Sidebar */}
-      <div ref={sidebarRef} className={`sidebar ${isOpen ? 'open' : ''}`}>
+      {/* Sidebar Navigation */}
+      <div 
+        ref={sidebarRef} 
+        className={`sidebar ${isSidebarOpen ? 'open' : ''}`}
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        {/* Sidebar Header */}
         <h2 className="sidebar-logo">Volunteer Portal</h2>
 
-        {/* Navigation Links */}
+        {/* Navigation Menu */}
         <nav>
           <ul>
             {menuItems.map((item) => (
@@ -73,7 +94,8 @@ const VolunteerSidebar = () => {
                 <Link
                   to={item.path}
                   onClick={toggleSidebar}
-                  className={`flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${isActive(item.path)}`}
+                  className={`flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${isActiveRoute(item.path)}`}
+                  aria-current={location.pathname === item.path ? "page" : undefined}
                 >
                   {item.icon}
                   <span>{item.text}</span>
@@ -83,7 +105,7 @@ const VolunteerSidebar = () => {
           </ul>
         </nav>
 
-        {/* Theme Toggle */}
+        {/* Theme Toggle Section */}
         <div className="theme-toggle-container">
           <div className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
             <span className="text-sm text-gray-600 dark:text-gray-300">Theme</span>
@@ -95,6 +117,7 @@ const VolunteerSidebar = () => {
         <button
           className="logout-btn"
           onClick={handleLogout}
+          aria-label="Logout"
         >
           <FaSignOutAlt className="w-5 h-5" />
           <span>Logout</span>

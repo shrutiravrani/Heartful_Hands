@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import API from '../api';
 import { io } from 'socket.io-client';
 import './VolunteerChat.css';
@@ -26,7 +26,7 @@ const VolunteerChat = () => {
   const [selectedSender, setSelectedSender] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [unreadMessages, setUnreadMessages] = useState({});
 
@@ -36,7 +36,7 @@ const VolunteerChat = () => {
       socket.emit('joinUserRoom', userId);
     }
 
-    socket.on('receiveMessage', (message) => {
+    const handleNewMessage = (message) => {
       if (selectedSender && message.sender._id === selectedSender._id) {
         setMessages(prev => [...prev, message]);
       } else {
@@ -45,31 +45,34 @@ const VolunteerChat = () => {
           [message.sender._id]: (prev[message.sender._id] || 0) + 1
         }));
       }
-    });
+    };
+
+    socket.on('receiveMessage', handleNewMessage);
 
     return () => {
-      socket.off('receiveMessage');
+      socket.off('receiveMessage', handleNewMessage);
     };
   }, [selectedSender]);
 
   useEffect(() => {
-    const fetchSenders = async () => {
+    const loadSenders = async () => {
       try {
         setError('');
         const response = await API.get('/chat/senders');
         setSenders(response.data);
       } catch (err) {
         setError('Failed to load conversations');
+        console.error('Error loading senders:', err);
       }
     };
-    fetchSenders();
+    loadSenders();
   }, []);
 
   useEffect(() => {
     if (selectedSender) {
-      const fetchMessages = async () => {
+      const loadMessages = async () => {
         try {
-          setLoading(true);
+          setIsLoading(true);
           const response = await API.get(`/chat/messages/${selectedSender._id}`);
           console.log('Messages with media:', response.data.filter(msg => msg.media));
           setMessages(response.data);
@@ -79,11 +82,12 @@ const VolunteerChat = () => {
           }));
         } catch (err) {
           setError('Failed to load messages');
+          console.error('Error loading messages:', err);
         } finally {
-          setLoading(false);
+          setIsLoading(false);
         }
       };
-      fetchMessages();
+      loadMessages();
     }
   }, [selectedSender]);
 
@@ -91,7 +95,7 @@ const VolunteerChat = () => {
     if (!newMessage.trim() || !selectedSender) return;
 
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await API.post('/chat/reply', {
         recipientId: selectedSender._id,
         message: newMessage.trim()
@@ -100,16 +104,26 @@ const VolunteerChat = () => {
       setNewMessage('');
     } catch (err) {
       setError('Failed to send message');
+      console.error('Error sending message:', err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const renderMediaContent = (message) => {
+  const renderMediaContent = useCallback((message) => {
     if (!message.media) return null;
 
     const mediaUrl = `${API.defaults.baseURL}${message.media.url}`;
     console.log('Media URL:', mediaUrl);
+
+    const createMediaLink = (url, text) => {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.textContent = text;
+      link.className = 'media-link';
+      return link;
+    };
 
     if (message.media.type === 'photo') {
       return (
@@ -120,11 +134,7 @@ const VolunteerChat = () => {
             className="message-image"
             onError={(e) => {
               const parent = e.target.parentNode;
-              const link = document.createElement('a');
-              link.href = mediaUrl;
-              link.target = '_blank';
-              link.textContent = 'View Image';
-              link.className = 'media-link';
+              const link = createMediaLink(mediaUrl, 'View Image');
               parent.replaceChild(link, e.target);
             }}
           />
@@ -138,11 +148,7 @@ const VolunteerChat = () => {
             className="message-video"
             onError={(e) => {
               const parent = e.target.parentNode;
-              const link = document.createElement('a');
-              link.href = mediaUrl;
-              link.target = '_blank';
-              link.textContent = 'View Video';
-              link.className = 'media-link';
+              const link = createMediaLink(mediaUrl, 'View Video');
               parent.replaceChild(link, e.target);
             }}
           >
@@ -153,7 +159,7 @@ const VolunteerChat = () => {
       );
     }
     return null;
-  };
+  }, []);
 
   return (
     <div className="chat-container">
@@ -242,9 +248,9 @@ const VolunteerChat = () => {
                   <button
                     className="chat-send-button"
                     onClick={handleSendMessage}
-                    disabled={loading || !newMessage.trim()}
+                    disabled={isLoading || !newMessage.trim()}
                   >
-                    {loading ? 'Sending...' : 'Send'}
+                    {isLoading ? 'Sending...' : 'Send'}
                   </button>
                 </div>
               </>

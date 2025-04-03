@@ -14,7 +14,7 @@ const createEvent = async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // ✅ Create the event
+    // Create the event
     const newEvent = new Event({
       title,
       description,

@@ -1,22 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import API from '../api';
+import { Search } from 'lucide-react';
 import './VolunteerEvents.css';
 
 const VolunteerEvents = () => {
+  // State management
   const [events, setEvents] = useState([]);
-  const [allEvents, setAllEvents] = useState([]); // Store all events
-  const [loading, setLoading] = useState(true);
+  const [allEvents, setAllEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     date: '',
-    applicationStatus: 'all' // 'all', 'applied', 'not-applied'
+    applicationStatus: 'all'
   });
 
-  const fetchEvents = useCallback(async () => {
+  // Fetch events from API
+  const loadEvents = useCallback(async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       setError(null);
       
       const queryParams = new URLSearchParams({
@@ -25,81 +29,84 @@ const VolunteerEvents = () => {
         ...(filters.date && { date: filters.date })
       }).toString();
       
-      console.log('Fetching events with params:', queryParams);
-      const eventRes = await API.get(`/events?${queryParams}`);
+      const response = await API.get(`/events?${queryParams}`);
       
-      console.log('Raw API response:', eventRes.data);
-      
-      // Check if the response has the expected structure
-      if (!eventRes.data) {
+      if (!response.data) {
         console.error('No data in response');
         setAllEvents([]);
         setTotalPages(1);
         return;
       }
 
-      // Handle both array and object response formats
-      const eventsArray = Array.isArray(eventRes.data) 
-        ? eventRes.data 
-        : eventRes.data.events || [];
-
-      console.log('Events array:', eventsArray);
+      const eventsArray = Array.isArray(response.data) 
+        ? response.data 
+        : response.data.events || [];
 
       if (eventsArray.length > 0) {
-        // Filter out past events and store all events
         const now = new Date();
         const upcomingEvents = eventsArray.filter(event => 
           new Date(event.date) >= now
         );
         
-        console.log('Upcoming events:', upcomingEvents);
         setAllEvents(upcomingEvents);
         
-        // Set total pages based on response
-        const total = Array.isArray(eventRes.data) 
+        const total = Array.isArray(response.data) 
           ? eventsArray.length 
-          : eventRes.data.total || eventsArray.length;
+          : response.data.total || eventsArray.length;
         
         setTotalPages(Math.ceil(total / 20));
       } else {
-        console.log('No events found in response');
         setAllEvents([]);
         setTotalPages(1);
       }
     } catch (err) {
       console.error('Error fetching events:', err);
-      console.error('Error details:', err.response?.data);
       setError(err.response?.data?.message || 'Failed to fetch events.');
       setAllEvents([]);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [page, filters.date]);
 
-  // Apply filters whenever allEvents or filters change
-  useEffect(() => {
-    let filteredEvents = [...allEvents];
+  // Apply filters and search
+  const filteredEvents = useMemo(() => {
+    let result = [...allEvents];
     
+    // Apply application status filter
     if (filters.applicationStatus !== 'all') {
-      filteredEvents = allEvents.filter(event => 
+      result = result.filter(event => 
         filters.applicationStatus === 'applied' ? event.hasApplied : !event.hasApplied
       );
     }
     
-    // Sort events by date (upcoming first)
-    filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(event => 
+        event.title.toLowerCase().includes(term) ||
+        event.description.toLowerCase().includes(term) ||
+        event.location.toLowerCase().includes(term)
+      );
+    }
     
+    // Sort events by date
+    return result.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [allEvents, filters.applicationStatus, searchTerm]);
+
+  // Update events when filters change
+  useEffect(() => {
     setEvents(filteredEvents);
-  }, [allEvents, filters.applicationStatus]);
+  }, [filteredEvents]);
 
   // Initial load and when page/date changes
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    loadEvents();
+  }, [loadEvents]);
 
+  // Handle event application
   const handleApply = async (eventId) => {
     try {
-      // Disable the button immediately to prevent double clicks
+      // Update UI immediately
       setAllEvents(prevEvents => 
         prevEvents.map(event => 
           event._id === eventId 
@@ -108,16 +115,10 @@ const VolunteerEvents = () => {
         )
       );
 
-      console.log('Attempting to apply for event:', eventId);
       const response = await API.post(`/events/${eventId}/apply`);
-      console.log('Full API response:', response);
       
-      // Check if the response is successful
       if (response && response.status >= 200 && response.status < 300) {
-        // Show success message
         alert("Successfully applied for the event!");
-        
-        // Update the event list to reflect the change
         setAllEvents(prevEvents => 
           prevEvents.map(event => 
             event._id === eventId 
@@ -130,13 +131,9 @@ const VolunteerEvents = () => {
       }
     } catch (err) {
       console.error("Application Error:", err);
-      console.error("Error response:", err.response?.data);
-      console.error("Error status:", err.response?.status);
       
-      // Check if it's a duplicate application error
       if (err.response?.data?.error === 'You have already applied for this event') {
         alert("You have already applied for this event.");
-        // Update the UI to show as applied
         setAllEvents(prevEvents => 
           prevEvents.map(event => 
             event._id === eventId 
@@ -145,9 +142,7 @@ const VolunteerEvents = () => {
           )
         );
       } else if (err.response?.status === 500) {
-        // Handle 500 error - the application might have succeeded despite the error
         alert("Thanks for applying for the event.");
-        // Update the UI to show as applied
         setAllEvents(prevEvents => 
           prevEvents.map(event => 
             event._id === eventId 
@@ -156,9 +151,7 @@ const VolunteerEvents = () => {
           )
         );
       } else {
-        // Show error message
         alert("Thanks for applying for the event. Please try again.");
-        // Revert the button state if the application failed
         setAllEvents(prevEvents => 
           prevEvents.map(event => 
             event._id === eventId 
@@ -170,43 +163,63 @@ const VolunteerEvents = () => {
     }
   };
 
+  // Handle filter changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
     setPage(1);
   };
 
-  if (loading) return <div className="loading">Loading events...</div>;
+  // Handle search input
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setPage(1);
+  };
+
+  if (isLoading) return <div className="loading">Loading events...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="volunteer-events-container">
       <h2>Available Events</h2>
       
-      {/* Filters */}
-      <div className="filters-container">
-        <div className="filter-group">
-          <label htmlFor="date">Filter by Date:</label>
+      {/* Search and Filters */}
+      <div className="search-filters-container">
+        <div className="search-container">
+          <Search className="search-icon" />
           <input
-            type="date"
-            id="date"
-            name="date"
-            value={filters.date}
-            onChange={handleFilterChange}
+            type="text"
+            placeholder="Search events..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="search-input"
           />
         </div>
-        <div className="filter-group">
-          <label htmlFor="applicationStatus">Application Status:</label>
-          <select
-            id="applicationStatus"
-            name="applicationStatus"
-            value={filters.applicationStatus}
-            onChange={handleFilterChange}
-          >
-            <option value="all">All Events</option>
-            <option value="applied">Applied Events</option>
-            <option value="not-applied">Not Applied Events</option>
-          </select>
+        
+        <div className="filters-container">
+          <div className="filter-group">
+            <label htmlFor="date">Filter by Date:</label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={filters.date}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="applicationStatus">Application Status:</label>
+            <select
+              id="applicationStatus"
+              name="applicationStatus"
+              value={filters.applicationStatus}
+              onChange={handleFilterChange}
+            >
+              <option value="all">All Events</option>
+              <option value="applied">Applied Events</option>
+              <option value="not-applied">Not Applied Events</option>
+            </select>
+          </div>
         </div>
       </div>
 

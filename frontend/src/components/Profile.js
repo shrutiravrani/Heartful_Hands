@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import API from "../api";
-import { Camera, Save, Edit3, Plus, X, Star, Calendar, Clock, Medal, StarHalf } from "lucide-react"; // Modern Icons
+import { Camera, Save, Edit3, Plus, X, Star, Calendar, Clock, StarHalf } from "lucide-react"; // Modern Icons
 import "./Profile.css"; // Import refined styling
 import { toast } from "react-hot-toast";
 import Modal from "./Modal";
@@ -425,8 +425,7 @@ const Profile = () => {
               </div>
 
               {/* Two Column Sections */}
-              <div className="sections-grid">
-                {/* Skills Section */}
+              <div className="two-column-sections">
                 <div 
                   className="section-container clickable-section"
                   onClick={() => {
@@ -436,13 +435,19 @@ const Profile = () => {
                 >
                   <h3 className="section-title">Key Skills</h3>
                   <div className="skills-grid">
-                    <div className="skill-count">
-                      {profile.keySkills?.length || 0} Skills
-                    </div>
+                    {(profile.keySkills || []).slice(0, 3).map((skill, index) => (
+                      <div key={index} className="skill-tag">
+                        {skill}
+                      </div>
+                    ))}
+                    {profile.keySkills?.length > 3 && (
+                      <div className="more-skills">
+                        +{profile.keySkills.length - 3} more
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Experience Section */}
                 <div 
                   className="section-container clickable-section"
                   onClick={() => {
@@ -451,64 +456,63 @@ const Profile = () => {
                   }}
                 >
                   <h3 className="section-title">Experience</h3>
-                  <div className="experience-list">
-                    <div className="experience-count">
-                      {profile.experience?.length || 0} Experiences
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reviews Section */}
-                <div 
-                  className="section-container clickable-section"
-                  onClick={() => setActiveModal('reviews')}
-                >
-                  <h3 className="section-title">Recent Reviews</h3>
-                  <div className="reviews-list">
-                    <div className="review-count">
-                      {profile.ratings?.reviews?.length || 0} Reviews
-                    </div>
-                  </div>
-                </div>
-
-                {/* Achievements Section */}
-                <div 
-                  className="section-container clickable-section"
-                  onClick={() => {
-                    console.log('Opening achievements modal');
-                    setActiveModal('achievements');
-                  }}
-                >
-                  <h3 className="section-title">Achievements</h3>
-                  <div className="achievements-grid">
-                    <div className="achievement-count">
-                      {profile.achievements?.length || 0} Achievements
-                    </div>
-                  </div>
-                </div>
-              </div>
-            
-
-              {/* Recent Reviews */}
-              <div className="recent-reviews-section">
-                <h3>Recent Reviews</h3>
-                <div className="reviews-grid">
-                  {profile.ratings?.reviews?.slice(0, 3).map((review, index) => (
-                    <div key={index} className="review-card">
-                      <div className="review-header">
-                        <div className="review-rating">
-                          {renderRatingStars(review.rating)}
-                        </div>
-                        <span className="review-date">
-                          {new Date(review.date).toLocaleDateString()}
-                        </span>
+                  <div className="experience-preview">
+                    {(profile.experience || []).slice(0, 2).map((exp, index) => (
+                      <div key={index} className="experience-item">
+                        <div className="experience-title">{exp.title}</div>
+                        <div className="experience-org">{exp.organization}</div>
                       </div>
-                      <p className="review-comment">{review.review}</p>
-                    
-                    </div>
-                  ))}
+                    ))}
+                    {profile.experience?.length > 2 && (
+                      <div className="more-experience">
+                        +{profile.experience.length - 2} more
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {/* Only show achievements and reviews for own profile */}
+              {isOwnProfile && (
+                <>
+                  <div 
+                    className="section-container clickable-section"
+                    onClick={() => {
+                      console.log('Opening achievements modal');
+                      setActiveModal('achievements');
+                    }}
+                  >
+                    <h3 className="section-title">Achievements</h3>
+                    <div className="achievements-grid">
+                      <div className="achievement-count">
+                        {profile.achievements?.length || 0} Achievements
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Reviews */}
+                  {profile.ratings?.reviews?.length > 0 && (
+                    <div className="recent-reviews-section">
+                      <h3>Recent Reviews</h3>
+                      <div className="reviews-grid">
+                        {profile.ratings.reviews.slice(0, 3).map((review, index) => (
+                          <div key={index} className="review-card">
+                            <div className="review-header">
+                              <div className="review-rating">
+                                {renderRatingStars(review.rating)}
+                              </div>
+                              <span className="review-date">
+                                {new Date(review.date).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="review-comment">{review.review}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
 
               {/* Modals */}
               <Modal
@@ -564,83 +568,88 @@ const Profile = () => {
                 </div>
               </Modal>
 
-              <Modal
-                isOpen={activeModal === 'reviews'}
-                onClose={() => {
-                  console.log('Closing reviews modal');
-                  setActiveModal(null);
-                }}
-                title="Reviews"
-              >
-                <div className="modal-reviews-list">
-                  {(profile.ratings?.reviews || []).map((review, index) => (
-                    <div key={index} className="modal-review-card">
-                      <div className="review-label">Review {index + 1}</div>
-                      <div className="review-content">
-                        <div className="review-field">
-                          <span className="field-label">Rating:</span>
-                          <div className="review-rating">
-                            {renderRatingStars(review.rating || 0)}
+              {/* Only show achievements and reviews modals for own profile */}
+              {isOwnProfile && (
+                <>
+                  <Modal
+                    isOpen={activeModal === 'achievements'}
+                    onClose={() => {
+                      console.log('Closing achievements modal');
+                      setActiveModal(null);
+                    }}
+                    title="Achievements"
+                  >
+                    <div className="modal-achievements-list">
+                      {(profile.achievements || []).map((achievement, index) => (
+                        <div key={index} className="modal-achievement-card">
+                          <div className="achievement-label">Achievement {index + 1}</div>
+                          <div className="achievement-content">
+                            <div className="achievement-field">
+                              <span className="field-label">Title:</span>
+                              <span className="field-value">{achievement.title || 'No title'}</span>
+                            </div>
+                            <div className="achievement-field">
+                              <span className="field-label">Description:</span>
+                              <span className="field-value">{achievement.description || 'No description'}</span>
+                            </div>
+                            <div className="achievement-field">
+                              <span className="field-label">Date:</span>
+                              <span className="field-value">
+                                {achievement.date ? new Date(achievement.date).toLocaleDateString() : 'No date'}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="review-field">
-                          <span className="field-label">Comment:</span>
-                          <span className="field-value">{review.review || 'No comment'}</span>
+                      ))}
+                      {(!profile.achievements || profile.achievements.length === 0) && (
+                        <div className="no-achievements-message">
+                          No achievements yet
                         </div>
-                        <div className="review-field">
-                          <span className="field-label">Date:</span>
-                          <span className="field-value">
-                            {review.date ? new Date(review.date).toLocaleDateString() : 'No date'}
-                          </span>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
-                  {(!profile.ratings?.reviews || profile.ratings.reviews.length === 0) && (
-                    <div className="no-reviews-message">
-                      No reviews yet
-                    </div>
-                  )}
-                </div>
-              </Modal>
+                  </Modal>
 
-              <Modal
-                isOpen={activeModal === 'achievements'}
-                onClose={() => {
-                  console.log('Closing achievements modal');
-                  setActiveModal(null);
-                }}
-                title="Achievements"
-              >
-                <div className="modal-achievements-grid">
-                  {(profile.achievements || []).map((achievement, index) => (
-                    <div key={index} className="modal-achievement-card">
-                      <div className="achievement-label">Achievement {index + 1}</div>
-                      <div className="achievement-content">
-                        <Medal size={24} className="medal-icon" />
-                        <div className="achievement-field">
-                          <span className="field-label">Title:</span>
-                          <span className="field-value">{achievement.title}</span>
+                  <Modal
+                    isOpen={activeModal === 'reviews'}
+                    onClose={() => {
+                      console.log('Closing reviews modal');
+                      setActiveModal(null);
+                    }}
+                    title="Reviews"
+                  >
+                    <div className="modal-reviews-list">
+                      {(profile.ratings?.reviews || []).map((review, index) => (
+                        <div key={index} className="modal-review-card">
+                          <div className="review-label">Review {index + 1}</div>
+                          <div className="review-content">
+                            <div className="review-field">
+                              <span className="field-label">Rating:</span>
+                              <div className="review-rating">
+                                {renderRatingStars(review.rating || 0)}
+                              </div>
+                            </div>
+                            <div className="review-field">
+                              <span className="field-label">Comment:</span>
+                              <span className="field-value">{review.review || 'No comment'}</span>
+                            </div>
+                            <div className="review-field">
+                              <span className="field-label">Date:</span>
+                              <span className="field-value">
+                                {review.date ? new Date(review.date).toLocaleDateString() : 'No date'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="achievement-field">
-                          <span className="field-label">Issuer:</span>
-                          <span className="field-value">{achievement.issuer}</span>
+                      ))}
+                      {(!profile.ratings?.reviews || profile.ratings.reviews.length === 0) && (
+                        <div className="no-reviews-message">
+                          No reviews yet
                         </div>
-                        <div className="achievement-field">
-                          <span className="field-label">Date:</span>
-                          <span className="field-value">
-                            {new Date(achievement.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="achievement-field">
-                          <span className="field-label">Description:</span>
-                          <span className="field-value">{achievement.description}</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </Modal>
+                  </Modal>
+                </>
+              )}
             </>
           )
         ) : (

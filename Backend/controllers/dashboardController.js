@@ -5,11 +5,11 @@ const Notification = require('../models/Notification');
 const getDashboardData = async (req, res) => {
   try {
     if (!req.user) {
-      console.error('❌ ERROR: No user found in request');
+      console.error('ERROR: No user found in request');
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    console.log('🔍 Dashboard Controller: Request User:', req.user);
+    console.log(' Dashboard Controller: Request User:', req.user);
     const { role, _id } = req.user;
 
     // Count unread notifications
@@ -46,7 +46,7 @@ const getDashboardData = async (req, res) => {
         }))
       };
 
-      console.log('📊 Dashboard Data for Volunteer:', {
+      console.log('Dashboard Data for Volunteer:', {
         totalEvents: joinedEvents.length,
         upcomingEvents: upcomingEvents.length,
         events: data.upcomingEvents
@@ -64,10 +64,10 @@ const getDashboardData = async (req, res) => {
       data = { ...data, eventsCount: createdEvents.length, pendingApplications };
     }
 
-    console.log('✅ Dashboard Data:', data);
+    console.log(' Dashboard Data:', data);
     res.status(200).json(data);
   } catch (error) {
-    console.error('❌ Dashboard Error:', error.message);
+    console.error(' Dashboard Error:', error.message);
     res.status(500).json({ error: 'Failed to load dashboard data', details: error.message });
   }
 };

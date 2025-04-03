@@ -11,17 +11,17 @@ body {
 }
 
 .chat-container {
-  max-width: 1400px; /* Increased max-width for broader layout */
+  max-width: 1000px; /* Increased max-width for broader layout */
   margin: 0 auto;
-  padding: 30px;
+  padding: 15px;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chat-header {
-  background-color: #4CAF50; /* Green instead of blue */
-  padding: 20px;
+  background-color: #c1bfbf; /* Green instead of blue */
+  padding: 10px;
   border-radius: 8px 8px 0 0;
 }
 
@@ -78,7 +78,7 @@ body {
 }
 
 .sender-item.selected {
-  background-color: #4CAF50; /* Green instead of blue */
+  background-color: #4a90e2; /* Green instead of blue */
   color: white;
 }
 
@@ -92,7 +92,7 @@ body {
 }
 
 .unread-count {
-  background-color: #4CAF50; /* Green instead of blue */
+  background-color: #4a90e2; /* Green instead of blue */
   color: white;
   border-radius: 50%;
   padding: 6px;
@@ -120,7 +120,7 @@ body {
 .chat-header-avatar {
   width: 50px;
   height: 50px;
-  background-color: #4CAF50; /* Green instead of blue */
+  background-color: #4a90e2; /* Green instead of blue */
   color: white;
   border-radius: 50%;
   display: flex;
@@ -197,7 +197,7 @@ body {
 }
 
 .chat-send-button {
-  background-color: #4CAF50; /* Green instead of blue */
+  background-color: #4a90e2; /* Green instead of blue */
   color: white;
   padding: 12px;
   border-radius: 8px;

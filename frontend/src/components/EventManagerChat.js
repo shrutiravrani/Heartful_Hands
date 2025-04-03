@@ -3,12 +3,15 @@ import API from '../api';
 import { io } from 'socket.io-client';
 import './EventManagerChat.css';
 
+// Socket connection setup
 const socket = io(API.defaults.baseURL, {
   withCredentials: true,
   transports: ['websocket', 'polling']
 });
 
+// Chat component for event managers
 const EventManagerChat = () => {
+  // State for managing chat
   const [senders, setSenders] = useState([]);
   const [selectedSender, setSelectedSender] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -16,94 +19,98 @@ const EventManagerChat = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Connect to socket when component mounts
+  // Socket connection and message handling
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     if (userId) {
       socket.emit('joinUserRoom', userId);
     }
 
-    // Listen for new messages
+    // Handle incoming messages
     socket.on('receiveMessage', (message) => {
       if (selectedSender && message.sender._id === selectedSender._id) {
-        setMessages((prev) => [...prev, message]);
+        setMessages(prev => [...prev, message]);
       }
     });
 
+    // Cleanup
     return () => {
       socket.off('receiveMessage');
     };
   }, [selectedSender]);
 
-  // Fetch list of senders (volunteers who have sent messages)
+  // Load list of volunteers who have messaged
   useEffect(() => {
-    const fetchSenders = async () => {
+    const getSenders = async () => {
       try {
         setError('');
-        const response = await API.get('/chat/senders');
-        setSenders(response.data);
+        const { data } = await API.get('/chat/senders');
+        setSenders(data);
       } catch (err) {
-        console.error('Error fetching senders:', err);
+        console.error('Could not load conversations:', err);
         setError('Failed to load conversations');
       }
     };
-    fetchSenders();
+    getSenders();
   }, []);
 
-  // Fetch messages when a sender is selected
+  // Load messages when a conversation is selected
   useEffect(() => {
     if (selectedSender) {
-      const fetchMessages = async () => {
+      const loadMessages = async () => {
         try {
           setLoading(true);
           setError('');
-          const response = await API.get(`/chat/messages/${selectedSender._id}`);
-          setMessages(response.data);
+          const { data } = await API.get(`/chat/messages/${selectedSender._id}`);
+          setMessages(data);
         } catch (err) {
-          console.error('Error fetching messages:', err);
+          console.error('Could not load messages:', err);
           setError('Failed to load messages');
         } finally {
           setLoading(false);
         }
       };
-      fetchMessages();
+      loadMessages();
     }
   }, [selectedSender]);
 
+  // Send a new message
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedSender) return;
 
     try {
       setLoading(true);
-      const response = await API.post('/chat/reply', {
+      const { data } = await API.post('/chat/reply', {
         recipientId: selectedSender._id,
         message: newMessage.trim(),
       });
 
-      // Add message to chat immediately
-      setMessages((prev) => [...prev, response.data]);
+      // Update messages immediately
+      setMessages(prev => [...prev, data]);
       setNewMessage('');
     } catch (err) {
-      console.error('Error sending message:', err);
-      setError('Failed to send message');
+      console.error('Message send failed:', err);
+      setError('Could not send message');
     } finally {
       setLoading(false);
     }
   };
 
-  // Format message time
-  const formatMessageTime = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Format time for messages
+  const getMessageTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
-  // Format message date
-  const formatMessageDate = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
+  // Format date for messages
+  const getMessageDate = (timestamp) => {
+    return new Date(timestamp).toLocaleDateString();
   };
 
-  const renderMediaContent = (message) => {
+  // Render media content (photos/videos)
+  const renderMedia = (message) => {
     if (!message.media) return null;
 
     const mediaUrl = `${API.defaults.baseURL}${message.media.url}`;
@@ -113,7 +120,7 @@ const EventManagerChat = () => {
         <div className="message-media">
           <img 
             src={mediaUrl}
-            alt="Shared photo"
+            alt="Message attachment"
             className="message-image"
             onClick={() => window.open(mediaUrl, '_blank')}
           />
@@ -138,7 +145,6 @@ const EventManagerChat = () => {
   return (
     <div className="chat-container">
       <div className="chat-wrapper">
-        {/* Header */}
         <div className="chat-header">
           <h1>Chat with Volunteers</h1>
         </div>
@@ -150,7 +156,7 @@ const EventManagerChat = () => {
         )}
 
         <div className="chat-body">
-          {/* Senders List */}
+          {/* Conversations list */}
           <div className="senders-list">
             <div className="senders-header">
               <h2>Conversations</h2>
@@ -178,11 +184,10 @@ const EventManagerChat = () => {
             </div>
           </div>
 
-          {/* Chat Area */}
+          {/* Main chat area */}
           <div className="chat-area">
             {selectedSender ? (
               <>
-                {/* Chat Header */}
                 <div className="chat-header-info">
                   <div className="sender-profile">
                     <span>{selectedSender.name.charAt(0)}</span>
@@ -193,7 +198,6 @@ const EventManagerChat = () => {
                   </div>
                 </div>
 
-                {/* Messages */}
                 <div className="messages">
                   {messages.length > 0 &&
                     messages.map((message, index) => {
@@ -205,10 +209,9 @@ const EventManagerChat = () => {
 
                       return (
                         <div key={message._id}>
-                          {/* Show date if it changes */}
                           {currentDate !== prevDate && (
                             <div className="message-date">
-                              {formatMessageDate(message.createdAt)}
+                              {getMessageDate(message.createdAt)}
                             </div>
                           )}
 
@@ -217,9 +220,9 @@ const EventManagerChat = () => {
                           >
                             <div className="message-content">
                               <div className="message-text">{message.text}</div>
-                              {renderMediaContent(message)}
+                              {renderMedia(message)}
                               <div className="message-time">
-                                {formatMessageTime(message.createdAt)}
+                                {getMessageTime(message.createdAt)}
                               </div>
                             </div>
                           </div>
@@ -228,7 +231,6 @@ const EventManagerChat = () => {
                     })}
                 </div>
 
-                {/* Message Input */}
                 <div className="message-input">
                   <textarea
                     className="input-text"

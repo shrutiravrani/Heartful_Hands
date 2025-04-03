@@ -4,150 +4,232 @@ import { Chart, ArcElement, BarElement, Tooltip, Legend, CategoryScale, LinearSc
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import "./Reports.css";
 
-// Register Chart.js Components
+// Set up Chart.js with all the components we need
 Chart.register(ArcElement, BarElement, Tooltip, Legend, CategoryScale, LinearScale, Title, PointElement, LineElement);
 
 const Reports = () => {
+  // State for managing reports data and UI
   const [reportsData, setReportsData] = useState(null);
-  const [role, setRole] = useState("");
-  const [error, setError] = useState("");
+  const [userRole, setUserRole] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Fetch reports data when component mounts
   useEffect(() => {
-    const fetchReports = async () => {
+    const loadReports = async () => {
       try {
+        // Check if user is logged in
         const token = localStorage.getItem("token");
         if (!token) {
-          setError("You are not logged in.");
+          setErrorMessage("Please log in to view reports");
           return;
         }
 
-        const { data: userProfile } = await API.get("/users/profile");
-        setRole(userProfile.role);
+        // Get user profile to determine role
+        const { data: profile } = await API.get("/users/profile");
+        setUserRole(profile.role);
 
-        if (!userProfile.role) {
-          setError("User role not found.");
+        if (!profile.role) {
+          setErrorMessage("Unable to determine user role");
           return;
         }
 
-        const reportsEndpoint = userProfile.role === "volunteer" ? "/reports/volunteer" : "/reports/manager";
-        const { data } = await API.get(reportsEndpoint);
+        // Fetch reports based on user role
+        const endpoint = profile.role === "volunteer" ? "/reports/volunteer" : "/reports/manager";
+        const { data } = await API.get(endpoint);
 
         if (!data) {
-          setError("No data received from the server.");
+          setErrorMessage("No data available");
           return;
         }
 
         setReportsData(data);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load reports.");
+        const error = err.response?.data?.message || "Failed to load reports";
+        setErrorMessage(error);
+        console.error("Error loading reports:", err);
       }
     };
 
-    fetchReports();
+    loadReports();
   }, []);
 
- 
-
-  const renderVolunteerOverview = () => {
-    // Get current month and previous 3 months
+  // Generate chart data for volunteer participation over time
+  const getVolunteerChartData = () => {
     const months = [];
-    const currentDate = new Date();
-    for (let i = 2; i >= 0; i--) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-      months.push(date.toLocaleString('default', { month: 'short' }));
+    const eventCounts = [];
+    
+    // Get data for last 4 months
+    for (let i = 3; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleString('default', { month: 'short' });
+      months.push(month);
+      eventCounts.push(reportsData.monthlyParticipation[month] || 0);
     }
-    months.push(currentDate.toLocaleString('default', { month: 'short' }));
 
-    // Get event counts for each month
-    const eventCounts = months.map(month => {
-      return reportsData.monthlyParticipation[month] || 0;
-    });
+    return { months, eventCounts };
+  };
+
+  // Generate chart data for recent participation
+  const getRecentParticipationData = () => {
+    const months = [];
+    const counts = [];
+    
+    // Get data for last 2 months
+    for (let i = 1; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleString('default', { month: 'short' });
+      months.push(month);
+      counts.push(reportsData.monthlyParticipation[month] || 0);
+    }
+
+    return { months, counts };
+  };
+
+  // Render volunteer overview charts
+  const renderVolunteerOverview = () => {
+    const { months, eventCounts } = getVolunteerChartData();
+    const { months: recentMonths, counts: recentCounts } = getRecentParticipationData();
 
     return (
       <div className="grid-container">
-        <div className="chart-container">
-          <h3 className="chart-title">Monthly Event Participation</h3>
-          <Line
-            data={{
-              labels: months,
-              datasets: [
-                {
-                  label: 'Events Participated',
-                  data: eventCounts,
-                  borderColor: '#4CAF50',
-                  backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                  tension: 0.4,
-                  fill: true
-                }
-              ]
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: 'top',
+        {/* Monthly participation trend */}
+        <div className="report-card">
+          <h3>Monthly Participation</h3>
+          <div className="chart-container">
+            <Line
+              data={{
+                labels: months,
+                datasets: [
+                  {
+                    label: 'Events Participated',
+                    data: eventCounts,
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                  }
+                ]
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'top',
+                  },
+                  title: {
+                    display: true,
+                    text: 'Event Participation (Last 4 Months)',
+                    font: {
+                      size: 16
+                    }
+                  }
                 },
-                title: {
-                  display: true,
-                  text: 'Last 4 Months'
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    stepSize: 1
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
                   }
                 }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
 
-        <div className="chart-container">
-          <h3 className="chart-title">Event Status</h3>
-          <Doughnut
-            data={{
-              labels: ["Upcoming", "Completed"],
-              datasets: [{ data: [reportsData.eventMetrics.upcomingCount, reportsData.eventMetrics.completedCount], backgroundColor: ["#4CAF50", "#2196F3"] }]
-            }}
-            options={{ plugins: { legend: { position: "bottom" } } }}
-          />
+        {/* Event status distribution */}
+        <div className="report-card">
+          <h3>Event Status</h3>
+          <div className="chart-container">
+            <Doughnut
+              data={{
+                labels: ["Upcoming", "Completed"],
+                datasets: [{ 
+                  data: [reportsData.eventMetrics.upcomingCount, reportsData.eventMetrics.completedCount], 
+                  backgroundColor: ["#4CAF50", "#2196F3"] 
+                }]
+              }}
+              options={{ plugins: { legend: { position: "bottom" } } }}
+            />
+          </div>
         </div>
 
-        <div className="full-width-chart">
-          <h3 className="chart-title">Monthly Participation</h3>
-          <Bar
-            data={{
-              labels: Object.keys(reportsData.monthlyParticipation),
-              datasets: [{ label: "Events Participated", data: Object.values(reportsData.monthlyParticipation), backgroundColor: "#4CAF50" }]
-            }}
-            options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "top" } } }}
-          />
+        {/* Recent participation */}
+        <div className="report-card">
+          <h3>Recent Participation</h3>
+          <div className="chart-container">
+            <Bar
+              data={{
+                labels: recentMonths,
+                datasets: [
+                  {
+                    label: 'Events Participated',
+                    data: recentCounts,
+                    backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 1
+                  }
+                ]
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: false
+                  },
+                  title: {
+                    display: true,
+                    text: 'Last 2 Months Participation',
+                    font: {
+                      size: 16
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     );
   };
 
-  const renderManagerOverview = () => {
-    // Get current month and previous 2 months
+  // Generate chart data for manager overview
+  const getManagerChartData = () => {
     const months = [];
     const currentDate = new Date();
-    // Start from 2 months ago (i=2) and go up to current month
+    
+    // Get last 3 months
     for (let i = 2; i >= 0; i--) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       months.push(date.toLocaleString('default', { month: 'short' }));
     }
 
-    // Get event counts for each month
-    const eventCounts = months.map(month => {
-      return reportsData.monthlyEventTrends[month] || 0;
-    });
+    // Calculate event counts
+    const eventCounts = months.map(month => reportsData.monthlyEventTrends[month] || 0);
+
+    return { months, eventCounts };
+  };
+
+  // Render manager overview charts
+  const renderManagerOverview = () => {
+    const { months, eventCounts } = getManagerChartData();
 
     return (
       <div className="grid-container">
+        {/* Event creation and applications */}
         <div className="full-width-chart">
           <h3 className="chart-title">Event Creation & Applications</h3>
           <Bar
@@ -217,6 +299,7 @@ const Reports = () => {
           />
         </div>
 
+        {/* Application status distribution */}
         <div className="chart-container">
           <h3 className="chart-title">Application Status Distribution</h3>
           <Doughnut
@@ -244,6 +327,7 @@ const Reports = () => {
           />
         </div>
 
+        {/* Top performing events */}
         <div className="chart-container">
           <h3 className="chart-title">Top Performing Events</h3>
           <Bar
@@ -281,18 +365,26 @@ const Reports = () => {
     );
   };
 
+  // Render tab navigation
   const renderTabs = () => (
     <div className="tabs-container">
-      <button onClick={() => setActiveTab("overview")} className={activeTab === "overview" ? "tab-active" : "tab"}>
+      <button 
+        onClick={() => setActiveTab("overview")} 
+        className={activeTab === "overview" ? "tab-active" : "tab"}
+      >
         Overview
       </button>
-      <button onClick={() => setActiveTab("details")} className={activeTab === "details" ? "tab-active" : "tab"}>
+      <button 
+        onClick={() => setActiveTab("details")} 
+        className={activeTab === "details" ? "tab-active" : "tab"}
+      >
         Detailed Reports
       </button>
     </div>
   );
 
-  if (error) return <p className="error-message">{error}</p>;
+  // Show loading or error states
+  if (errorMessage) return <p className="error-message">{errorMessage}</p>;
   if (!reportsData) return <p className="loading-message">Loading reports...</p>;
 
   return (
@@ -300,7 +392,7 @@ const Reports = () => {
       <h1 className="main-title">📊 Reports & Analytics</h1>
       {renderTabs()}
       {activeTab === "overview" ? (
-        role === "volunteer" ? renderVolunteerOverview() : renderManagerOverview()
+        userRole === "volunteer" ? renderVolunteerOverview() : renderManagerOverview()
       ) : (
         <p className="error-message">Detailed reports not implemented yet.</p>
       )}
