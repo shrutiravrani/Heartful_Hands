@@ -1,0 +1,170 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap");
+
+/* Color variables to match sidebar */
+:root {
+  --primary-color: #2c3e50;
+  --background-light: #f4f4f4;
+  --sidebar-bg: #e6e6e6;
+  --text-dark: #2c3e50;
+  --text-muted: #636e72;
+  --hover-light: #dcdcdc;
+  --border-color: #d1d1d1;
+}
+
+/* Main container */
+.events-container {
+  max-width: 1400px;
+  margin: 50px auto;
+  padding: 20px;
+  font-family: "Nunito", sans-serif;
+}
+
+/* Header */
+.events-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--sidebar-bg);
+  color: var(--text-dark);
+  padding: 15px 25px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.events-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.create-event-btn {
+  background: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.create-event-btn:hover {
+  background: #1a252f;
+}
+
+/* Events Grid */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+  margin-top: 30px;
+}
+
+/* Event Card */
+.event-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  border: 1px solid var(--border-color);
+  transition: 0.3s;
+}
+
+.event-card:hover {
+  background: var(--hover-light);
+  transform: translateY(-5px);
+}
+
+/* Event Info */
+.event-info h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.event-description {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 10px 0;
+}
+
+.event-meta {
+  margin-top: 10px;
+}
+
+.event-meta span {
+  display: block;
+  font-size: 14px;
+  color: var(--text-dark);
+  margin-bottom: 5px;
+}
+
+/* Status Colors */
+.status {
+  font-weight: bold;
+}
+
+.status.completed {
+  color: #10b981;
+}
+
+.status.pending {
+  color: #e74c3c;
+}
+
+/* Volunteer Count */
+.volunteer-count {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-dark);
+  margin-top: 10px;
+}
+
+/* Action Buttons */
+.event-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.action-btn {
+  font-size: 16px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-weight: 600;
+}
+
+.action-btn:hover {
+  opacity: 0.8;
+}
+
+.complete-btn {
+  background: #10b981;
+  color: white;
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+/* Laptop Optimization */
+@media (min-width: 1200px) {
+  .events-container {
+    max-width: 1400px;
+  }
+
+  .events-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .event-card {
+    padding: 30px;
+  }
+
+  .action-btn {
+    font-size: 18px;
+  }
+}

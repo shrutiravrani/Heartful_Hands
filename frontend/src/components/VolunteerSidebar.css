@@ -1,0 +1,95 @@
+/* 📌 SIDEBAR: Now fits ALL screen sizes perfectly */
+.sidebar {
+    height: 100dvh;  /* 100% viewport height */
+    width: clamp(250px, 18vw, 320px); /* Dynamically adjust width */
+    background: var(--sidebar-bg);
+    color: var(--text-dark);
+    position: fixed;
+    top: 0;
+    left: -100%; /* Sidebar starts hidden */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid var(--border-color);
+    transition: left 0.3s ease-in-out;
+    z-index: 1000;
+    overflow-y: auto; /* Ensures scroll if needed */
+  }
+  
+  /* 📌 OPEN SIDEBAR */
+  .sidebar.open {
+    left: 0;
+  }
+  
+  /* 📌 FIX SIDEBAR WIDTH FOR LARGE SCREENS */
+  @media (min-width: 1024px) {
+    .sidebar {
+      width: 300px; /* More comfortable on big screens */
+    }
+  }
+  
+  /* 📌 LOGO */
+  .sidebar-logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-left: 100px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+  }
+  
+  /* 📌 NAVIGATION LINKS */
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .sidebar ul li {
+    margin-bottom: 12px;
+  }
+  
+  .sidebar ul li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .sidebar ul li a:hover {
+    background: var(--hover-light);
+    transform: translateX(4px);
+  }
+  
+  /* 📌 THEME TOGGLE CONTAINER */
+  .theme-toggle-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+  }
+  
+ 
+  .menu-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+    z-index: 1100;
+  }
+  
+  .menu-btn:hover {
+    background: var(--hover-light);
+  }
+  

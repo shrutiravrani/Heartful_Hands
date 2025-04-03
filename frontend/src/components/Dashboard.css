@@ -1,0 +1,170 @@
+/* Import a modern, elegant font */
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap");
+
+:root {
+  --primary-color: #2c3e50;  /* Elegant Deep Blue */
+  --secondary-color: #7f8c8d; /* Muted Gray */
+  --background-light: #f8f9fa; /* Soft White */
+  --card-bg: #ffffff; /* Pure White for Cards */
+  --border-color: #d1d1d1; /* Soft border for elegance */
+  --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --text-dark: #2c3e50; /* Classy Deep Blue/Black */
+  --text-muted: #636e72; /* Soft Gray */
+}
+
+body {
+  font-family: "Nunito", sans-serif;
+  background: var(--background-light);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+}
+
+/* 📌 Dashboard Container */
+.dashboard-container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+/* 📌 Header */
+.dashboard-header {
+  text-align: center;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--primary-color);
+}
+
+.dashboard-subtext {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+/* 📌 Dashboard Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+  padding: 0 10px;
+}
+
+/* 📌 Widget Cards */
+.dashboard-widget {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-light);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.3s ease-in-out;
+  border: 1px solid var(--border-color);
+}
+
+.dashboard-widget:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+.widget-icon {
+  font-size: 2rem;
+  color: var(--primary-color);
+}
+
+.widget-text h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.widget-text p {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 4px 0 0;
+  color: var(--text-dark);
+}
+
+/* 📌 Upcoming Events */
+.upcoming-events {
+  margin-top: 40px;
+  padding: 0 10px;
+}
+
+.section-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+/* 📌 Event Cards */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.event-card {
+  background: var(--card-bg);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease-in-out;
+}
+
+.event-card:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-light);
+}
+
+.event-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.event-date,
+.event-location {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* 📌 Buttons */
+.dashboard-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.btn {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-dark);
+  background: var(--background-light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+}

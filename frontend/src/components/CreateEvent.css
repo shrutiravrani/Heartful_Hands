@@ -1,0 +1,96 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap");
+
+:root {
+  --primary-color: #2c3e50;
+  --background-light: #f4f4f4;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --border-color: #d1d1d1;
+  --text-dark: #2c3e50;
+  --text-muted: #636e72;
+  --btn-bg: #2c3e50;
+  --btn-hover-bg: #1e2a38;
+  --shadow-light: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styling */
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #e6e6e6, #ffffff);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+}
+
+/* Form Container */
+.event-form-container {
+  max-width: 600px;
+  width: 90%;
+  margin: 50px auto;
+  padding: 30px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-light);
+  text-align: center;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hover effect */
+.event-form-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Title */
+.event-form-header {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+/* Input Fields */
+.event-form input,
+.event-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  transition: border 0.3s ease-in-out;
+}
+
+/* Focus Effect */
+.event-form input:focus,
+.event-form textarea:focus {
+  border: 1px solid var(--primary-color);
+  outline: none;
+}
+
+/* Button */
+.event-submit-btn {
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--btn-bg);
+  color: white;
+  margin-top: 15px;
+}
+
+.event-submit-btn:hover {
+  background: var(--btn-hover-bg);
+  transform: scale(1.05);
+}
+
+/* Error Message */
+.event-error {
+  color: red;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
