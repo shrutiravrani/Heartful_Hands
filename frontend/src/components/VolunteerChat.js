@@ -185,7 +185,6 @@ const VolunteerChat = () => {
                       <div className="unread-count">{unreadMessages[sender._id]}</div>
                     )}
                   </div>
-                  <div className="sender-last-message">{sender.lastMessage}</div>
                 </div>
               ))}
             </div>

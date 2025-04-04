@@ -176,9 +176,6 @@ const EventManagerChat = () => {
                       </span>
                     )}
                   </div>
-                  <div className="sender-last-message">
-                    {sender.lastMessage}
-                  </div>
                 </div>
               ))}
             </div>

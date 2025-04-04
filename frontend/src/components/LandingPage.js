@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./LandingPage.css"; // Import the new CSS
+import logo from "../images/Heartful.png"; // Import the logo image
 
 const LandingPage = () => {
   const [stats, setStats] = useState({
@@ -46,7 +47,7 @@ const LandingPage = () => {
       {/* Navbar */}
       <nav className="navbar">
         <div className="logo">
-          <span className="logo-icon">💖</span>
+          <img src={logo} alt="Heartful Hands Logo" className="logo-img" />
           <span className="logo-text">Heartful Hands</span>
         </div>
         <div className="nav-links">
@@ -165,7 +166,7 @@ const LandingPage = () => {
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-logo">
-            <span className="logo-icon">💖</span>
+            <img src={logo} alt="Heartful Hands Logo" className="logo-img" />
             <span className="logo-text">Heartful Hands</span>
           </div>
           <div className="footer-links">

@@ -128,16 +128,18 @@
 }
 
 .event-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
   font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  background-color: #e2e8f0;
-  color: #4a5568;
+  font-weight: 500;
+  background-color: var(--bg-light);
+  color: var(--text-muted);
 }
 
 .event-status.applied {
-  background-color: #c6f6d5;
-  color: #2f855a;
+  background-color: var(--success-light);
+  color: var(--success);
 }
 
 .description {
@@ -162,35 +164,46 @@
   font-weight: 600;
 }
 
+/* Apply Button */
 .apply-button {
-  width: 100%;
-  padding: 1rem;
+  padding: 0.5rem 0.75rem;
   border: none;
-  border-radius: 0.75rem;
-  background-color: #4a90e2;
+  border-radius: 0.5rem;
+  background-color: var(--primary);
   color: white;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-top: auto;
+  text-align: center;
+  display: inline-block;
+  min-width: 100px;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-self: center;
 }
 
 .apply-button:hover:not(:disabled) {
-  background-color: #357abd;
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .apply-button:disabled {
-  background-color: #e2e8f0;
+  background-color: var(--bg-light);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
 .apply-button.applied {
-  background-color: #48bb78;
+  background-color: var(--success);
 }
 
 .apply-button.applying {
-  background-color: #a0aec0;
+  background-color: var(--text-muted);
 }
 
 /* Pagination */

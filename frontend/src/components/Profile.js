@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import API from "../api";
-import { Camera, Save, Edit3, Plus, X, Star, Calendar, Clock, StarHalf } from "lucide-react"; // Modern Icons
+import { Camera, Save, Edit3, X, Star, Calendar, Clock, StarHalf } from "lucide-react"; // Modern Icons
 import "./Profile.css"; // Import refined styling
 import { toast } from "react-hot-toast";
 import Modal from "./Modal";
@@ -654,18 +654,30 @@ const Profile = () => {
           )
         ) : (
           <div className="profile-form">
-            <div className="input-group full-width">
-              <label>Name</label>
-              <input
-                type="text"
-                name="name"
-                value={profile.name}
-                onChange={handleChange}
-                className="form-input"
-              />
+            <div className="form-row">
+              <div className="form-field">
+                <label>Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={profile.name}
+                  onChange={handleChange}
+                  className="form-input"
+                />
+              </div>
+              <div className="form-field">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profile.email}
+                  onChange={handleChange}
+                  className="form-input"
+                />
+              </div>
             </div>
 
-            <div className="input-group full-width">
+            <div className="form-field full-width">
               <label>Bio</label>
               <textarea
                 name="bio"
@@ -680,7 +692,7 @@ const Profile = () => {
             {profile.role === 'volunteer' && (
               <>
                 {/* Skills Input */}
-                <div className="input-group">
+                <div className="form-field full-width">
                   <label>Key Skills</label>
                   <div className="skills-input-container">
                     <input
@@ -701,81 +713,82 @@ const Profile = () => {
                       className="button add-btn"
                       type="button"
                     >
-                      <Plus size={16} />
+                      Add
                     </button>
                   </div>
-                  <div className="skills-list">
+                  <div className="skills-grid">
                     {(profile.keySkills || []).map((skill, index) => (
                       <div key={index} className="skill-tag">
                         {skill}
-                        <button
-                          onClick={() => handleRemoveSkill(skill)}
+                        <X
+                          size={16}
                           className="remove-skill"
-                        >
-                          <X size={14} />
-                        </button>
+                          onClick={() => handleRemoveSkill(skill)}
+                        />
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Experience Input */}
-                <div className="input-group full-width">
-                  <label>Add Experience</label>
-                  <input
-                    type="text"
-                    value={newExperience.title}
-                    onChange={(e) => setNewExperience({
-                      ...newExperience,
-                      title: e.target.value
-                    })}
-                    className="form-input"
-                    placeholder="Title"
-                  />
-                  <input
-                    type="text"
-                    value={newExperience.organization}
-                    onChange={(e) => setNewExperience({
-                      ...newExperience,
-                      organization: e.target.value
-                    })}
-                    className="form-input"
-                    placeholder="Organization"
-                  />
-                  <input
-                    type="text"
-                    value={newExperience.duration}
-                    onChange={(e) => setNewExperience({
-                      ...newExperience,
-                      duration: e.target.value
-                    })}
-                    className="form-input"
-                    placeholder="Duration (e.g., Jan 2022 - Present)"
-                  />
-                  <textarea
-                    value={newExperience.description}
-                    onChange={(e) => setNewExperience({
-                      ...newExperience,
-                      description: e.target.value
-                    })}
-                    className="form-textarea"
-                    placeholder="Description"
-                    rows="3"
-                  />
-                  <button
-                    onClick={handleAddExperience}
-                    className="button add-btn"
-                    type="button"
-                  >
-                    Add Experience
-                  </button>
+                <div className="form-field full-width">
+                  <label>Experience</label>
+                  <div className="experience-input-container">
+                    <input
+                      type="text"
+                      value={newExperience.title}
+                      onChange={(e) => setNewExperience({
+                        ...newExperience,
+                        title: e.target.value
+                      })}
+                      className="form-input"
+                      placeholder="Title"
+                    />
+                    <input
+                      type="text"
+                      value={newExperience.organization}
+                      onChange={(e) => setNewExperience({
+                        ...newExperience,
+                        organization: e.target.value
+                      })}
+                      className="form-input"
+                      placeholder="Organization"
+                    />
+                    <input
+                      type="text"
+                      value={newExperience.duration}
+                      onChange={(e) => setNewExperience({
+                        ...newExperience,
+                        duration: e.target.value
+                      })}
+                      className="form-input"
+                      placeholder="Duration (e.g., Jan 2022 - Present)"
+                    />
+                    <textarea
+                      value={newExperience.description}
+                      onChange={(e) => setNewExperience({
+                        ...newExperience,
+                        description: e.target.value
+                      })}
+                      className="form-textarea"
+                      placeholder="Description"
+                      rows="3"
+                    />
+                    <button
+                      onClick={handleAddExperience}
+                      className="button add-btn"
+                      type="button"
+                    >
+                      Add Experience
+                    </button>
+                  </div>
                 </div>
 
                 {/* Availability Section */}
-                <div className="input-group">
+                <div className="form-field">
                   <label>Availability</label>
                   <div className="checkbox-group">
-                    <label>
+                    <div className="checkbox-item">
                       <input
                         type="checkbox"
                         checked={profile.availability?.weekdays || false}
@@ -787,9 +800,9 @@ const Profile = () => {
                           }
                         })}
                       />
-                      Weekdays
-                    </label>
-                    <label>
+                      <label>Weekdays</label>
+                    </div>
+                    <div className="checkbox-item">
                       <input
                         type="checkbox"
                         checked={profile.availability?.weekends || false}
@@ -801,14 +814,14 @@ const Profile = () => {
                           }
                         })}
                       />
-                      Weekends
-                    </label>
+                      <label>Weekends</label>
+                    </div>
                   </div>
                 </div>
               </>
             )}
 
-            <div className="button-group full-width">
+            <div className="button-container">
               <button
                 onClick={() => {
                   setIsEditing(false);
@@ -816,17 +829,17 @@ const Profile = () => {
                   setPreviewUrl(getFullImageUrl(profile.profileImage));
                   setError("");
                 }}
-                className="button cancel-btn"
+                className="cancel-button"
                 disabled={loading}
               >
-                Cancel
+                <X size={16} /> Cancel
               </button>
               <button
                 onClick={handleSaveChanges}
-                className="button save-btn"
+                className="save-button"
                 disabled={loading}
               >
-                {loading ? "Saving..." : <><Save size={20} /> Save Changes</>}
+                {loading ? "Saving..." : <><Save size={16} /> Save Changes</>}
               </button>
             </div>
           </div>
