@@ -350,23 +350,6 @@ const Training = () => {
       </div>
 
       {error && <div className="error-message">{error}</div>}
-
-      <div className="filter-section">
-        <Filter size={20} />
-        <select
-          value={filterEvent}
-          onChange={(e) => setFilterEvent(e.target.value)}
-          className="event-filter"
-        >
-          <option value="">All Events</option>
-          {events.map((event) => (
-            <option key={event._id} value={event._id}>
-              {event.title}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {isLoading ? (
         <div className="loading-state">
           <div className="spinner"></div>
