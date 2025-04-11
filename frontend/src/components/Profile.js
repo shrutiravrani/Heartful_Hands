@@ -66,7 +66,7 @@ const Profile = () => {
     }
     
     // Use environment variable for base URL
-    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const baseUrl = process.env.REACT_APP_API_URL || 'https://vms-be-bwb0.onrender.com';
     return `${baseUrl}${imageUrl}`;
   };
 

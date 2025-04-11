@@ -9,7 +9,7 @@ require('dotenv').config();
 
 const app = express();
 
-// Create uploads directory if it doesn't exist
+//uploads directory 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o755 });
@@ -18,7 +18,7 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
+  origin: 'https://vms-fe-seven.vercel.app', 
   credentials: true
 }));
 app.use(express.json());

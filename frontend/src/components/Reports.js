@@ -389,12 +389,12 @@ const Reports = () => {
 
   return (
     <div className="reports-container">
-      <h1 className="main-title">📊 Reports & Analytics</h1>
+      <h1 className="main-title"> Reports & Analytics</h1>
       {renderTabs()}
       {activeTab === "overview" ? (
         userRole === "volunteer" ? renderVolunteerOverview() : renderManagerOverview()
       ) : (
-        <p className="error-message">Detailed reports not implemented yet.</p>
+        <p className="error-message">Detailed reports not implementede yet.</p>
       )}
     </div>
   );
